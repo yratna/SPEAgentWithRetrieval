@@ -1,6 +1,6 @@
 # Azure AI Chat Agent with SharePoint RAG
 
-This project implements a chat agent using Azure AI Foundry SDK that retrieves and grounds responses on SharePoint content through Microsoft 365 Copilot APIs.
+This project implements a chat agent using Azure AI Foundry SDK that retrieves and grounds responses on SharePoint Embedded content through Microsoft 365 Copilot Retrieval API. Note that SPE datasource is in private preview for the Retrieval API. 
 
 This agent uses Azure AI Foundry and Retrieval API to enable contract managers reason with their documents.
 
@@ -51,12 +51,12 @@ cd SPEAgentWithRetrieval
    {
      "AzureAIFoundry": {
        "ProjectEndpoint": "https://your-foundry-resource.services.ai.azure.com",
-       "ModelName": "gpt-4.1"
+       "ModelName": "gpt-4.1" //or your model name
      },
      "Microsoft365": {
        "TenantId": "your-tenant-id-guid",
        "ClientId": "your-client-id-guid",
-       "FilterExpression": "path:\"https://your-tenant.sharepoint.com/your-content-path/\""
+       "FilterExpression": "path:\"https://your-tenant.sharepoint.com/your-content-path/\"" //or any SharePoint URL. Check Retrieval API documentation for the URL
      }
    }
    ```
