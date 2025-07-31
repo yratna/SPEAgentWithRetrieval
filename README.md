@@ -83,23 +83,75 @@ dotnet run
 
 ## Architecture
 
-### Services
+### Overview
+The application is structured around the following components:
 
-- **`ChatService`**: Orchestrates the RAG pipeline
-- **`FoundryService`**: Handles Azure AI Foundry interactions
-- **`CopilotRetrievalService`**: Manages SharePoint content retrieval
+#### 1. Retrieval Layer
+- **Purpose**: Fetches content from SharePoint using Microsoft Graph API.
+- **Key Component**: `CopilotRetrievalService.cs`
+  - Retrieves SharePoint content.
+  - Implements chunking and embedding strategies for retrieval-augmented generation (RAG).
+  - Handles authentication and API calls using Microsoft Graph SDK.
 
-### Authentication
+#### 2. Synthesis Layer
+- **Purpose**: Generates responses using Azure AI Foundry SDK.
+- **Key Component**: `FoundryService.cs`
+  - Synthesizes responses based on retrieved content.
+  - Implements chat completions and content generation patterns.
+  - Uses Azure AI SDK for .NET.
 
-- **User Context**: Uses `InteractiveBrowserCredential` for delegated permissions
-- **Token Caching**: Automatic token refresh without re-authentication
-- **Scoped Access**: Only accesses content the user has permissions to view
+#### 3. Orchestration Layer
+- **Purpose**: Coordinates retrieval and synthesis processes.
+- **Key Component**: `ChatService.cs`
+  - Sequentially orchestrates retrieval and synthesis.
+  - Implements async/await patterns for I/O operations.
+  - Handles error management and logging.
 
-### Configuration
+#### 4. Presentation Layer
+- **Purpose**: Displays synthesized responses and sources to the user.
+- **Key Component**: `Program.cs`
+  - Manages user input and output.
+  - Displays top sources and synthesized responses.
 
-- **Strongly-typed**: Uses IOptions pattern for type-safe configuration
-- **Environment-aware**: Supports multiple configuration files
-- **Sensitive Data**: Protected through .gitignore and example files
+#### 5. Configuration and Logging
+- **Purpose**: Manages application settings and logs.
+- **Key Components**:
+  - `appsettings.json`: Stores configuration settings.
+  - `ILogger`: Implements structured logging for debugging and monitoring.
+
+#### 6. Authentication
+- **Purpose**: Ensures secure access to APIs.
+- **Key Component**: Token caching with `InteractiveBrowserCredential`.
+
+### Architecture Diagram
+
+```
++---------------------+
+|   Presentation      |
+|      Layer          |
+|   (Program.cs)      |
++---------------------+
+          |
+          v
++---------------------+
+|   Orchestration     |
+|      Layer          |
+|   (ChatService.cs)  |
++---------------------+
+          |
+          v
++---------------------+       +---------------------+
+|   Retrieval Layer   |       |   Synthesis Layer   |
+| (CopilotRetrieval   |       |   (FoundryService)  |
+|    Service.cs)      |       |                     |
++---------------------+       +---------------------+
+          |                           |
+          v                           v
++---------------------+       +---------------------+
+| Microsoft Graph API |       | Azure AI Foundry    |
+|   (SharePoint)      |       |   SDK              |
++---------------------+       +---------------------+
+```
 
 ## Security
 
