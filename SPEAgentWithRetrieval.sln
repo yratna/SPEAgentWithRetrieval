@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPEAgentWithRetrieval.Core"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPEAgentWithRetrieval.Console", "SPEAgentWithRetrieval.Console\SPEAgentWithRetrieval.Console.csproj", "{F5ED96F3-D480-4DE3-A7C1-AC08DF713B8F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApiTemp", "WebApiTemp\WebApiTemp.csproj", "{78288FD7-325E-4962-A0F7-7EB554895771}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{F5ED96F3-D480-4DE3-A7C1-AC08DF713B8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5ED96F3-D480-4DE3-A7C1-AC08DF713B8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5ED96F3-D480-4DE3-A7C1-AC08DF713B8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78288FD7-325E-4962-A0F7-7EB554895771}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78288FD7-325E-4962-A0F7-7EB554895771}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78288FD7-325E-4962-A0F7-7EB554895771}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78288FD7-325E-4962-A0F7-7EB554895771}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
