@@ -25,13 +25,17 @@ public class CopilotRetrievalService : IRetrievalService
         _chatSettings = chatSettings.Value;
         _logger = logger;
 
-        // Use Interactive Browser Authentication for user context - store as field for reuse
+                // Use Interactive Browser Authentication for user context - store as field for reuse
         _credential = _microsoft365Options.UseUserAuthentication
             ? new InteractiveBrowserCredential(new InteractiveBrowserCredentialOptions
             {
                 TenantId = _microsoft365Options.TenantId,
                 ClientId = _microsoft365Options.ClientId,
-                RedirectUri = new Uri("http://localhost")
+                RedirectUri = new Uri("http://localhost"),
+                BrowserCustomization = new BrowserCustomizationOptions
+                {
+                    UseEmbeddedWebView = false  // Use the system default browser instead of opening a new one
+                }
             })
             : new DefaultAzureCredential();
 
