@@ -18,7 +18,17 @@
             background-color: #0078d4;
             color: white;
             padding: 1rem;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo {
+            height: 40px;
+            margin-right: 15px;
+        }
+        header h1 {
+            margin: 0;
+            font-weight: 600;
         }
         .container {
             flex: 1;
@@ -29,6 +39,31 @@
             padding: 1rem;
             width: 100%;
             box-sizing: border-box;
+        }
+        .system-prompt {
+            background-color: #f0f7ff;
+            border: 1px solid #cce5ff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .system-prompt h2 {
+            color: #0078d4;
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+        .system-prompt ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        .system-prompt li {
+            margin-bottom: 0.5rem;
+        }
+        .example-questions {
+            font-style: italic;
+            color: #555;
+            margin-top: 0.5rem;
         }
         .chat-container {
             flex: 1;
@@ -82,9 +117,12 @@
             border-radius: 0 4px 4px 0;
             cursor: pointer;
             font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
         }
         #send-button:hover {
             background-color: #006abc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
         .loading {
             display: none;
@@ -101,9 +139,22 @@
 </head>
 <body>
     <header>
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMyAyMyI+PHBhdGggZD0iTTAgMGgyM3YyM0gweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xMS41IDBDMTcuOSAwIDIzIDUuMSAyMyAxMS41UzE3LjkgMjMgMTEuNSAyM1MwIDE3LjkgMCAxMS41IDUuMSAwIDExLjUgMHptMCAxYy01LjggMC0xMC41IDQuNy0xMC41IDEwLjVTNS43IDIyIDExLjUgMjIgMjIgMTcuMyAyMiAxMS41IDEzLjMgMSAxMS41IDF6bTUuOSA3LjVjLjYgMCAxLjEuNSAxLjEgMS4xcy0uNSAxLjEtMS4xIDEuMS0xLjEtLjUtMS4xLTEuMS41LTEuMSAxLjEtMS4xek0xMS41IDZDMTQgNiAxNiA4IDE2IDEwLjVjMCAxLjItLjUgMi4zLTEuMyAzLjFsLS4zLjNjLS4xLjEtLjEuMi0uMi4zbC0uMS4xYy0uNC4zLS43LjYtLjcgMS4xdjEuMmgtNHYtMS4yYzAtMS42IDEtMi41IDItMy4zdi0uMWwuMS0uMWMuMi0uMi4zLS40LjMtLjdjMC0uNi0uNC0xLTEtMVMxMCAxMSAxMCAxMS41SDdjMC0yLjUgMi00LjUgNC41LTQuNXptLTIgMTAuNWg0djJoLTR2LTJ6IiBmaWxsPSIjZmZmIi8+PC9zdmc+" alt="Microsoft Logo" class="logo">
         <h1>SharePoint RAG Chat Agent</h1>
     </header>
     <div class="container">
+        <div class="system-prompt">
+            <h2>What can this SharePoint Agent do?</h2>
+            <ul>
+                <li><strong>Search and retrieve</strong> content from your organization's SharePoint</li>
+                <li><strong>Answer questions</strong> based on your documents and SharePoint content</li>
+                <li><strong>Find specific information</strong> in documents and provide sources</li>
+                <li><strong>Assist with document-related queries</strong> using AI-powered insights</li>
+            </ul>
+            <div class="example-questions">
+                Try asking: "Find recent marketing documents", "Summarize our project timeline", or "What does our policy say about remote work?"
+            </div>
+        </div>
         <div class="chat-container" id="chat-container">
             <div class="message bot-message">
                 Hello! I'm your SharePoint RAG Chat Agent. Ask me anything about your SharePoint documents.
