@@ -175,6 +175,30 @@
             line-height: 1.5;
         }
 
+        .message-content p {
+            margin: 0 0 8px 0;
+        }
+
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-content .list-item {
+            margin: 8px 0;
+            padding-left: 0;
+        }
+
+        .message-content .bullet-item {
+            margin: 4px 0;
+            padding-left: 16px;
+            text-indent: -16px;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+            color: inherit;
+        }
+
         .message.user .message-content {
             background: linear-gradient(135deg, #475569 0%, #64748b 100%);
             color: white;
@@ -631,6 +655,39 @@
                 msalInstance.logout();
             });
 
+            function formatAIResponse(message) {
+                // Escape HTML to prevent XSS attacks
+                const escapeHtml = (text) => {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                };
+                
+                let formattedMessage = escapeHtml(message);
+                
+                // Convert numbered lists (1. 2. etc.)
+                formattedMessage = formattedMessage.replace(/(\d+\.\s\*\*[^*]+\*\*)/g, '<div class="list-item"><strong>$1</strong></div>');
+                
+                // Convert **bold** text to HTML bold
+                formattedMessage = formattedMessage.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                
+                // Convert bullet points starting with - or *
+                formattedMessage = formattedMessage.replace(/^[\-\*]\s+(.+)$/gm, '<div class="bullet-item">• $1</div>');
+                
+                // Convert double line breaks to paragraph breaks
+                formattedMessage = formattedMessage.replace(/\n\n/g, '</p><p>');
+                
+                // Convert single line breaks to <br> tags
+                formattedMessage = formattedMessage.replace(/\n/g, '<br>');
+                
+                // Wrap in paragraph tags if not already wrapped
+                if (!formattedMessage.startsWith('<p>') && !formattedMessage.includes('<div')) {
+                    formattedMessage = `<p>${formattedMessage}</p>`;
+                }
+                
+                return formattedMessage;
+            }
+
             function addMessage(message, isUser, sources = [], timestamp = new Date()) {
                 const messageElement = document.createElement('div');
                 messageElement.className = `message ${isUser ? 'user' : 'bot'}`;
@@ -641,7 +698,15 @@
                 
                 const content = document.createElement('div');
                 content.className = 'message-content';
-                content.textContent = message;
+                
+                // Format the message content to preserve line breaks and structure
+                if (isUser) {
+                    content.textContent = message;
+                } else {
+                    // For AI responses, preserve formatting and handle line breaks
+                    const formattedMessage = formatAIResponse(message);
+                    content.innerHTML = formattedMessage;
+                }
                 
                 const timeElement = document.createElement('div');
                 timeElement.className = 'message-time';

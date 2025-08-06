@@ -94,6 +94,11 @@ public class FoundryService : IFoundryService
         systemMessageBuilder.AppendLine("Instructions:");
         systemMessageBuilder.AppendLine("- Answer based on the provided context");
         systemMessageBuilder.AppendLine("- Be concise and accurate");
+        systemMessageBuilder.AppendLine("- Use proper formatting with line breaks and structure");
+        systemMessageBuilder.AppendLine("- Use **bold** for important terms and headings");
+        systemMessageBuilder.AppendLine("- Use numbered lists (1. 2. 3.) for ordered information");
+        systemMessageBuilder.AppendLine("- Use bullet points with - for unordered lists");
+        systemMessageBuilder.AppendLine("- Separate different topics with blank lines");
         systemMessageBuilder.AppendLine("- If asked about sources, reference the titles and URLs provided");
         systemMessageBuilder.AppendLine("- If the context doesn't contain enough information, be honest about limitations");
 
