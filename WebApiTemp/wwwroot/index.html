@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SharePoint Agent Chat</title>
+    <!-- Include MSAL.js for authentication -->
+    <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -135,6 +137,51 @@
             color: #999;
             margin-top: 0.25rem;
         }
+        .auth-section {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .auth-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        .auth-button:hover {
+            background-color: #006abc;
+        }
+        .auth-button.secondary {
+            background-color: #f0f0f0;
+            color: #333;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        .auth-button.secondary:hover {
+            background-color: #e0e0e0;
+        }
+        #user-info {
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #user-name {
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        .chat-interface-disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -143,6 +190,16 @@
         <h1>SharePoint RAG Chat Agent</h1>
     </header>
     <div class="container">
+        <!-- Authentication section -->
+        <div id="auth-section" class="auth-section">
+            <button id="sign-in-button" class="auth-button">Sign in with Microsoft</button>
+            <div id="user-info" style="display: none;">
+                Signed in as: <span id="user-name"></span>
+                            <button id="sign-out-button" class="auth-button secondary">Sign Out</button>
+        </div>
+            </div>
+        </div>
+
         <div class="system-prompt">
             <h2>What can this SharePoint Agent do?</h2>
             <ul>
@@ -174,10 +231,152 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
             const chatContainer = document.getElementById('chat-container');
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
             const loading = document.getElementById('loading');
+            const signInButton = document.getElementById('sign-in-button');
+            const signOutButton = document.getElementById('sign-out-button');
+            const userInfo = document.getElementById('user-info');
+            const userName = document.getElementById('user-name');
+            
+            // Authentication state
+            let msalInstance = null;
+            let userAccount = null;
+            let accessToken = null;
+            
+            // Initialize MSAL
+            async function initializeMsal() {
+                try {
+                    // Fetch configuration from server
+                    const configResponse = await fetch('/api/config');
+                    if (!configResponse.ok) {
+                        throw new Error('Failed to load authentication configuration');
+                    }
+                    
+                    const config = await configResponse.json();
+                    console.log('Auth config loaded:', { clientId: config.clientId, tenantId: config.tenantId });
+                    
+                    // MSAL configuration (using working patterns from sample)
+                    const msalConfig = {
+                        auth: {
+                            clientId: config.clientId,
+                            authority: `https://login.microsoftonline.com/${config.tenantId}`,
+                            redirectUri: window.location.origin,
+                            postLogoutRedirectUri: window.location.origin,
+                        },
+                        cache: {
+                            cacheLocation: 'sessionStorage', // Using sessionStorage like working sample
+                            storeAuthStateInCookie: false
+                        },
+                        system: {
+                            loggerOptions: {
+                                loggerCallback: (level, message, containsPii) => {
+                                    if (containsPii) return;
+                                    console.log(`MSAL (${level}): ${message}`);
+                                },
+                                piiLoggingEnabled: false,
+                                logLevel: msal.LogLevel.Warning // Reduced logging for production
+                            }
+                        }
+                    };
+                    
+                    // Initialize MSAL
+                    msalInstance = new msal.PublicClientApplication(msalConfig);
+                    await msalInstance.initialize();
+                    
+                    // Check if user is already signed in
+                    const accounts = msalInstance.getAllAccounts();
+                    if (accounts.length > 0) {
+                        userAccount = accounts[0];
+                        msalInstance.setActiveAccount(userAccount); // Set active account
+                        showUserInfo(userAccount);
+                        await acquireToken();
+                    }
+                } catch (error) {
+                    console.error('Error initializing authentication:', error);
+                    alert('Error initializing authentication. Please refresh the page and try again.');
+                }
+            }
+            
+            // Show user info in the UI
+            function showUserInfo(account) {
+                if (account) {
+                    signInButton.style.display = 'none';
+                    userInfo.style.display = 'flex';
+                    userName.textContent = account.name || account.username;
+                    document.querySelector('.input-container').classList.remove('chat-interface-disabled');
+                }
+            }
+            
+            // Acquire token silently
+            async function acquireToken() {
+                if (!userAccount) {
+                    console.error('No user account found for token acquisition');
+                    return null;
+                }
+                
+                try {
+                    console.log('Attempting silent token acquisition...');
+                    const tokenRequest = {
+                        scopes: ['Files.ReadWrite.All'], // Using short scope format
+                        account: userAccount,
+                        forceRefresh: false
+                    };
+                    
+                    const response = await msalInstance.acquireTokenSilent(tokenRequest);
+                    accessToken = response.accessToken;
+                    console.log('Token acquired successfully (silent)');
+                    return accessToken;
+                } catch (error) {
+                    console.warn('Silent token acquisition failed, using interactive method', error);
+                    
+                    // Check if it's an InteractionRequiredAuthError
+                    if (error.name === 'InteractionRequiredAuthError') {
+                        try {
+                            const response = await msalInstance.acquireTokenPopup({
+                                scopes: ['Files.ReadWrite.All'], // Use same short format
+                                account: userAccount
+                            });
+                            accessToken = response.accessToken;
+                            console.log('Token acquired successfully via popup');
+                            return accessToken;
+                        } catch (interactiveError) {
+                            console.error('Interactive authentication failed', interactiveError);
+                            alert('Authentication failed. Please try again.');
+                            return null;
+                        }
+                    } else {
+                        console.error('Token acquisition failed with unexpected error', error);
+                        return null;
+                    }
+                }
+            }
+            
+            // Sign in handler
+            signInButton.addEventListener('click', async () => {
+                try {
+                    // Login with popup using short scope format
+                    const authResult = await msalInstance.loginPopup({
+                        scopes: ['User.Read', 'Files.ReadWrite.All'], // Match working sample format
+                        prompt: 'select_account'
+                    });
+                    
+                    userAccount = authResult.account;
+                    msalInstance.setActiveAccount(userAccount); // Set active account
+                    showUserInfo(userAccount);
+                    await acquireToken();
+                } catch (error) {
+                    console.error('Login failed:', error);
+                    alert('Login failed. Please try again.');
+                }
+            });
+            
+            // Sign out handler
+            signOutButton.addEventListener('click', () => {
+                msalInstance.logout();
+            });
 
             // Function to add a message to the chat
             function addMessage(message, isUser, sources = [], timestamp = new Date()) {
@@ -222,16 +421,38 @@
                 try {
                     loading.style.display = 'block';
                     
+                    // If no token, try to acquire one
+                    if (!accessToken && userAccount) {
+                        console.log('No access token available, attempting to acquire one');
+                        accessToken = await acquireToken();
+                    }
+                    
+                    // Send message to API
                     const response = await fetch('/api/chat', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ message })
+                        body: JSON.stringify({ 
+                            message: message,
+                            accessToken: accessToken 
+                        })
                     });
 
+                    if (response.status === 401) {
+                        console.log('Authentication error (401), attempting to acquire a new token');
+                        accessToken = await acquireToken();
+                        
+                        if (accessToken) {
+                            // Retry with new token
+                            return await sendMessage(message);
+                        } else {
+                            throw new Error('Failed to acquire authentication token');
+                        }
+                    }
+
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error(`Server error: ${response.status}`);
                     }
 
                     const data = await response.json();
@@ -244,7 +465,7 @@
                 }
             }
 
-            // Event listeners
+            // Event listeners for chat
             sendButton.addEventListener('click', function() {
                 const message = messageInput.value.trim();
                 if (message) {
@@ -265,8 +486,14 @@
                 }
             });
 
-            // Focus on input field when the page loads
-            messageInput.focus();
+            // Initialize authentication
+            initializeMsal();
+            
+            // Add initial bot message
+            addMessage('Hello! I\'m your SharePoint RAG Chat Agent. Please sign in to start asking questions about your SharePoint documents.', false);
+            
+            // Initially disable the input container until user is authenticated
+            document.querySelector('.input-container').classList.add('chat-interface-disabled');
         });
     </script>
 </body>

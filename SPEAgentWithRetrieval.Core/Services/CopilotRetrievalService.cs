@@ -1,45 +1,29 @@
-using Azure.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using SPEAgentWithRetrieval.Core.Models;
-using Microsoft.Graph;
 using System.Text.Json;
 using System.Text;
+using System.Net.Http.Headers;
 
 namespace SPEAgentWithRetrieval.Core.Services;
 
 public class CopilotRetrievalService : IRetrievalService
 {
-    private readonly GraphServiceClient _graphClient;
     private readonly Microsoft365Options _microsoft365Options;
     private readonly ChatSettingsOptions _chatSettings;
     private readonly ILogger<CopilotRetrievalService> _logger;
-    private readonly Azure.Core.TokenCredential _credential;
+    private readonly ITokenProvider _tokenProvider;
 
     public CopilotRetrievalService(
         IOptions<Microsoft365Options> microsoft365Options,
         IOptions<ChatSettingsOptions> chatSettings,
+        ITokenProvider tokenProvider,
         ILogger<CopilotRetrievalService> logger)
     {
         _microsoft365Options = microsoft365Options.Value;
         _chatSettings = chatSettings.Value;
         _logger = logger;
-
-                // Use Interactive Browser Authentication for user context - store as field for reuse
-        _credential = _microsoft365Options.UseUserAuthentication
-            ? new InteractiveBrowserCredential(new InteractiveBrowserCredentialOptions
-            {
-                TenantId = _microsoft365Options.TenantId,
-                ClientId = _microsoft365Options.ClientId,
-                RedirectUri = new Uri("http://localhost"),
-                BrowserCustomization = new BrowserCustomizationOptions
-                {
-                    UseEmbeddedWebView = false  // Use the system default browser instead of opening a new one
-                }
-            })
-            : new DefaultAzureCredential();
-
-        _graphClient = new GraphServiceClient(_credential, _microsoft365Options.Scopes);
+        _tokenProvider = tokenProvider;
     }
 
     public async Task<List<RetrievedContent>> SearchAsync(string query, CancellationToken cancellationToken = default)
@@ -70,12 +54,26 @@ public class CopilotRetrievalService : IRetrievalService
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
             };
 
-            // Send request through Graph client
-            var httpClient = new HttpClient();
-            var token = await GetAccessTokenAsync();
-            httpRequestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            // Get token from token provider
+            var token = await _tokenProvider.GetTokenAsync(cancellationToken);
             
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new InvalidOperationException("Authentication token is required but was not available");
+            }
+            
+            httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            
+            // Send request
+            var httpClient = new HttpClient();
             var response = await httpClient.SendAsync(httpRequestMessage, cancellationToken);
+            
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError("Retrieval API call returned Unauthorized (401): {Error}", errorContent);
+                throw new InvalidOperationException("Authentication failed with Microsoft Graph API. Token may be invalid or expired.");
+            }
             
             if (!response.IsSuccessStatusCode)
             {
@@ -114,14 +112,6 @@ public class CopilotRetrievalService : IRetrievalService
             _logger.LogError(ex, "Error occurred while retrieving content for query: {Query}", query);
             return new List<RetrievedContent>();
         }
-    }
-
-    private async Task<string> GetAccessTokenAsync()
-    {
-        var token = await _credential.GetTokenAsync(
-            new Azure.Core.TokenRequestContext(_microsoft365Options.Scopes),
-            CancellationToken.None);
-        return token.Token;
     }
 }
 

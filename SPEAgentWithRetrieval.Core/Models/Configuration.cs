@@ -18,6 +18,7 @@ public class Microsoft365Options
     public string FilterExpression { get; set; } = string.Empty;
     public bool UseUserAuthentication { get; set; } = true;
     public string[] Scopes { get; set; } = { "https://graph.microsoft.com/Files.Read.All", "https://graph.microsoft.com/Sites.Read.All" };
+    public bool AllowAnonymousRequests { get; set; } = false; // For development only - allows requests without authentication
 }
 
 public class ChatSettingsOptions

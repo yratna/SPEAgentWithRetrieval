@@ -19,6 +19,7 @@ builder.Services.Configure<ChatSettingsOptions>(
     builder.Configuration.GetSection(ChatSettingsOptions.SectionName));
 
 // Register services
+builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddScoped<IRetrievalService, CopilotRetrievalService>();
 builder.Services.AddScoped<IFoundryService, FoundryService>();
 builder.Services.AddScoped<IChatService, ChatService>();
