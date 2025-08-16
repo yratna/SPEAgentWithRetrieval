@@ -38,7 +38,7 @@ cd SPEAgentWithRetrieval
    - Go to [Azure Portal](https://portal.azure.com)
    - Navigate to **Azure Active Directory** → **App registrations**
    - Click **New registration**
-   - Name: `SPE Agent` (or your preferred name)
+   - Name: your app name
    - Supported account types: **Accounts in this organizational directory only (Single tenant)**
    - Click **Register**
 
@@ -50,12 +50,7 @@ cd SPEAgentWithRetrieval
      - Set redirect URI to: `http://localhost`
      - Click **Configure**
 
-3. **Enable Public Client Flows**:
-   - Scroll down to **Advanced settings**
-   - Set **Allow public client flows** to **Yes**
-   - Click **Save**
-
-4. **Configure API Permissions** (Delegated):
+3. **Configure API Permissions** (Delegated):
    - Go to **API permissions** in the left menu
    - Click **Add a permission** → **Microsoft Graph** → **Delegated permissions**
    - Add these permissions:
