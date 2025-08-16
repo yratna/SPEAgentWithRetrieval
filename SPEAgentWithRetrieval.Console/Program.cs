@@ -28,6 +28,7 @@ class Program
                 services.Configure<ChatSettingsOptions>(configuration.GetSection("ChatSettings"));
 
                 // Register services
+                services.AddScoped<ITokenProvider, TokenProvider>();
                 services.AddScoped<IRetrievalService, CopilotRetrievalService>();
                 services.AddScoped<IFoundryService, FoundryService>();
                 services.AddScoped<IChatService, ChatService>();
