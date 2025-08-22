@@ -56,7 +56,7 @@ cd SPEAgentWithRetrieval
    - Add these permissions:
      - `Files.Read.All` (for SharePoint file access)
      - `Sites.Read.All` (for SharePoint site access)
-     - 'FileStorageContainer.Selected` deleted and application (if you need SharePointEmbedded container access)
+     - 'FileStorageContainer.Selected` delegated (if you need SharePointEmbedded container access)
    - Click **Grant admin consent** for your organization
 
 5. **Note Important IDs**:
