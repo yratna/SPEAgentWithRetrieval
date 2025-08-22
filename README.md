@@ -54,8 +54,9 @@ cd SPEAgentWithRetrieval
    - Go to **API permissions** in the left menu
    - Click **Add a permission** → **Microsoft Graph** → **Delegated permissions**
    - Add these permissions:
-     - `Files.ReadWrite.All` (for SharePoint file access)
+     - `Files.Read.All` (for SharePoint file access)
      - `Sites.Read.All` (for SharePoint site access)
+     - 'FileStorageContainer.Selected` deleted and application (if you need SharePointEmbedded container access)
    - Click **Grant admin consent** for your organization
 
 5. **Note Important IDs**:
